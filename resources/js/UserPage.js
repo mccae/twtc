@@ -54,8 +54,6 @@ class App extends Component {
 		}).catch(function (error) {
 			console.log(error) ;
 		}) ;
-	
-	
 		
 	}
 

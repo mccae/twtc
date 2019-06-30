@@ -6,7 +6,7 @@
 
 	<body>
 
-		<input id="viewer_is_logged_in" value='{{Auth::check()}}' type='hidden'
+		<input id="viewer_is_logged_in" value='{{Auth::check()}}' type='hidden' >
 		<div class="ui secondary menu" style="margin: 0px" >
 		  <a href="/" class="active item">
 			Home

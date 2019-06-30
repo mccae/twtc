@@ -1,9 +1,11 @@
 import React, { Component } from 'react' ;
 import ReactDOM from 'react-dom' ;
-import {Grid ,Image ,Loader ,Icon , Segment ,Modal , Dimmer} from 'semantic-ui-react' ;
+import {Grid ,Image ,Loader ,Icon , Segment ,Modal , Dimmer , Button} from 'semantic-ui-react' ;
 import Axios from 'axios' ;
 
 import Comments from './Comments.js' ;
+import Login from './Login.js'
+import ShowPost from './ShowPost' ;
 
 export default class Post extends Component {
 
@@ -15,6 +17,7 @@ export default class Post extends Component {
 		'userDidLike' : 0 ,
 		'loading' : false ,
 		'showPostOpen' : false ,
+		'openLogin' : false
 	}
 
 	componentDidMount = () => {
@@ -118,11 +121,20 @@ export default class Post extends Component {
 			}
 			else  // error
 			{
-
+				
 			}
 
 		}).catch(function (error) {
-			console.log(error) ;
+			if (error.response)
+			{
+				if (error.response.status == 401) // not logged in 
+				{
+					self.setState({
+						'openLogin' : true ,
+					})
+				}
+			}
+
 		}).finally(function () {
 			self.setState({
 				'loading' : false ,
@@ -130,7 +142,6 @@ export default class Post extends Component {
 		}) ;
 
 	}
-
 
 
 	
@@ -165,6 +176,13 @@ export default class Post extends Component {
 		})
 	}
 
+
+	closeLogin = () => {
+		this.setState({
+			'openLogin' : false
+		})
+	}
+
 	renderShowPost = () => {
 
 		if (this.state.showPostOpen)
@@ -193,7 +211,7 @@ export default class Post extends Component {
 	render() {
 		return (
 
-			<div style={{ 'marginTop' : '20px' }}>
+			<div style={{ 'marginBottom' : '20px' }}>
 
 				<Segment onClick={this.showPost} >
 
@@ -223,117 +241,14 @@ export default class Post extends Component {
 					<Loader size='mini' inline active={this.state.loading} />
 				</Segment>
 				{this.renderShowPost()}
+				  <Modal open={this.state.openLogin} onClose={this.closeLogin} >
+					<Modal.Content>
+						<Login />
+					</Modal.Content>
+				  </Modal>
 			</div>
 		)
 	}
 }
 
 
-class ShowPost extends Component {
-
-	viewer_is_logged_in = document.getElementById('viewer_is_logged_in').value ;
-
-	state = {
-		'commentsAreLoading' : true ,
-		'commentsLoading' : true ,
-		'commentsData' : [] ,
-		'commentsRaw' : {} ,
-	}
-
-
-	componentDidMount = () => {
-		this.loadComments() ;
-	}
-	
-	loadComments = () => {
-		
-		self = this ;
-
-		// check if the user liked the post and change state if did
-		Axios.get("/getCommentsForPost" , {
-			'params' : {
-				'postId' : self.props.item.id ,
-			} ,
-		}).then(function (response) {
-
-			self.setState({
-				'commentsData' : response.data.data ,
-				'commentsRaw' : response.data ,
-				// 'commentsLoadig' : false ,
-			})
-
-		}).catch(function (error) {
-			console.log(error.status) ;
-		}).finally(function () {
-			self.setState({
-				'commentsLoading' : false ,
-			})
-		})
-	}
-
-	renderComments = (comment) => {
-
-		return (
-			<Segment vertical key={comment.id}>
-				<a style={{'fontSize' : '15px'}} href={"/u/" + comment.name} >{comment.name}</a>
-				<p>{comment.content}</p>
-			</Segment>
-		)
-	}
-
-
-	renderLoader =() => {
-		return (
-			<Dimmer inverted active >
-				<Loader />
-			</Dimmer>
-		)
-	}
-
-
-
-	render() {
-		return (
-			<Modal open={this.props.open} onClose={this.props.close}>
-				<Modal.Header>
-					Delete Your Account
-				</Modal.Header>
-				<Modal.Content>
-					<Segment basic>
-						<div style={{ 'display' : 'inline-block' , 'width' : '30px' , 'verticalAlign' : 'top' , 'marginLeft' : '0px' , 'marginRight' : '10px' }}>
-							<Image size='mini' src={"/" + this.props.img} circular />
-						</div>
-
-						<div style={{ 'display' : 'inline-block' , 'width' : 'calc(100% - 43px)' }} >
-							<div >
-								<a style={{ 'fontWeight' : 'bold' , 'fontSize' : '17px' }} href={"/u/" + this.props.item.name} >{this.props.item.name}</a>
-							</div>
-							<div>
-								<p>{this.props.item.content}</p>
-							</div>
-							<div>
-								<span>
-									<Icon name='comments' color='grey' disabled />
-									<span style={{ 'color' : 'grey' }} >{this.props.commentsCount}</span>
-								</span>
-								<span style={{ 'cursor' : 'pointer'  , 'marginLeft' : '25px'}} onClick={this.props.toggleLike} >
-									<Icon color={this.props.userDidLike()} name='like' disabled /> 
-									<span style={{ 'color' : 'grey' }} >{this.props.likesCount}</span>
-								</span>
-							</div>
-						</div>
-					</Segment>
-					<Segment  basic style={{ 'marginTop' : '40px' , 'paddingLeft' : '70px' , 'paddingRight' : '70px'  }} >
-						{this.state.commentsLoading ? 
-							this.renderLoader()
-							:
-							this.state.commentsData.map(this.renderComments)
-						}
-					</Segment>
-				</Modal.Content>
-			</Modal>
-		)
-	}
-
-
-}
