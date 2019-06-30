@@ -36,7 +36,7 @@ class MainController extends Controller
 	public function showUserPage($username)
 	{
 
-		$user = User::where('name' , '=' , $username)->select('id')->get() ;
+		$user = User::where('name' , '=' , $username)->select('id')->paginate(7) ;
 
 		if ($user->count() == 0)
 		{

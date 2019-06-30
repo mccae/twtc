@@ -77,15 +77,10 @@ class App extends Component {
 	{
 		// if the current page is the same as the last page mean load button show not be viewd so return false
 		if (this.state.posts.current_page == this.state.posts.last_page) {
-			console.log('ok') ;
-			console.log(this.state.posts)
 			return false ;
 		}
 		else
 		{
-			console.log('not') ;
-			console.log(this.state.posts.current_page) ;
-			console.log(this.state.posts.last_page) ;
 			return true ;
 		}
 	}

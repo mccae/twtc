@@ -25,7 +25,5 @@ class FollowsSeeder extends Seeder
 			'user_id' => 1 ,
 			'follower_id' => 4 
 		]) ;
-
-
     }
 }

@@ -1,17 +1,20 @@
 import React, { Component } from 'react' ;
 import ReactDOM from 'react-dom' ;
-import {Grid ,Image ,Loader ,Icon , Segment} from 'semantic-ui-react' ;
+import {Grid ,Image ,Loader ,Icon , Segment ,Modal , Dimmer} from 'semantic-ui-react' ;
 import Axios from 'axios' ;
 
 import Comments from './Comments.js' ;
 
 export default class Post extends Component {
 
+
+
 	state = {
 		'likesCount' : 0 ,
 		'commentsCount' : 0 ,
 		'userDidLike' : 0 ,
-		'loading' : 0 ,
+		'loading' : false ,
+		'showPostOpen' : false ,
 	}
 
 	componentDidMount = () => {
@@ -90,14 +93,13 @@ export default class Post extends Component {
 	// but can be problem in likes count when used multiple tabs at the same time without reloading the page
 	toggleLike = (e) => {
 
-
 		e.stopPropagation();
 
 		var self = this ;
 
 		// show loading icon
 		this.setState({
-			'loading' : 1 ,
+			'loading' : true ,
 		})
 
 		Axios.get("/toggleLike" , {
@@ -123,19 +125,13 @@ export default class Post extends Component {
 			console.log(error) ;
 		}).finally(function () {
 			self.setState({
-				'loading' : 0 ,
+				'loading' : false ,
 			}) ;
 		}) ;
 
 	}
 
-	showLoader = () => {
-		if (this.state.loading == 1) { return true } ;
-		if (this.state.loading == 0) { return false } ;
-	}
 
-	showPost = () => {
-	}
 
 	
 	getProfileImg = () => {
@@ -155,40 +151,189 @@ export default class Post extends Component {
 	}
 
 
+	// __________________ modal function
+	
+	showPost = () => {
+		this.setState({
+			'showPostOpen' : true 
+		})
+	}
+
+	closeShowPost = () => {
+		this.setState({
+			'showPostOpen' : false 
+		})
+	}
+
+	renderShowPost = () => {
+
+		if (this.state.showPostOpen)
+		{
+			return (
+				<ShowPost
+					item_id={this.props.item_id}
+					close={this.closeShowPost} 
+					open={this.state.showPostOpen} 
+					img={this.getProfileImg()}
+					item={this.props.item}
+					commentsCount={this.state.commentsCount}
+					toggleLike={this.toggleLike}
+					userDidLike={this.userDidLike}
+					likesCount={this.state.likesCount}
+					commentsCount={this.state.commentsCount}
+				/>
+
+			)
+		}
+	}
+
+
+
 
 	render() {
 		return (
-			<Segment onClick={this.showPost} >
 
-				<div style={{ 'display' : 'inline-block' , 'width' : '30px' , 'verticalAlign' : 'top' , 'marginLeft' : '0px' , 'marginRight' : '10px' }}>
-					<Image size='mini' src={"/" + this.getProfileImg()} circular />
-				</div>
+			<div style={{ 'marginTop' : '20px' }}>
 
-				<div style={{ 'display' : 'inline-block' , 'width' : 'calc(100% - 43px)' }} >
-					<div >
-						<a style={{ 'fontWeight' : 'bold' , 'fontSize' : '17px' }} href={"/u/" + this.props.item.name} >{this.props.item.name}</a>
-					</div>
-					<div>
-						<p>{this.props.item.content}</p>
-					</div>
-					<div>
-						<span>
-							<Icon name='comments' color='grey' disabled />
-							<span style={{ 'color' : 'grey' }} >{this.state.commentsCount}</span>
-						</span>
-						<span style={{ 'cursor' : 'pointer'  , 'marginLeft' : '25px'}} onClick={this.toggleLike} >
-							<Icon color={this.userDidLike()} name='like' disabled /> 
-							<span style={{ 'color' : 'grey' }} >{this.state.likesCount}</span>
-						</span>
-					</div>
-				</div>
+				<Segment onClick={this.showPost} >
 
-				<Loader size='mini' inline active={this.showLoader()} />
+					<div style={{ 'display' : 'inline-block' , 'width' : '30px' , 'verticalAlign' : 'top' , 'marginLeft' : '0px' , 'marginRight' : '10px' }}>
+						<Image size='mini' src={"/" + this.getProfileImg()} circular />
+					</div>
+
+					<div style={{ 'display' : 'inline-block' , 'width' : 'calc(100% - 43px)' }} >
+						<div >
+							<a style={{ 'fontWeight' : 'bold' , 'fontSize' : '17px' }} href={"/u/" + this.props.item.name} >{this.props.item.name}</a>
+						</div>
+						<div>
+							<p>{this.props.item.content}</p>
+						</div>
+						<div>
+							<span>
+								<Icon name='comments' color='grey' disabled />
+								<span style={{ 'color' : 'grey' }} >{this.state.commentsCount}</span>
+							</span>
+							<span style={{ 'cursor' : 'pointer'  , 'marginLeft' : '25px'}} onClick={this.toggleLike} >
+								<Icon color={this.userDidLike()} name='like' disabled /> 
+								<span style={{ 'color' : 'grey' }} >{this.state.likesCount}</span>
+							</span>
+						</div>
+					</div>
+
+					<Loader size='mini' inline active={this.state.loading} />
+				</Segment>
+				{this.renderShowPost()}
+			</div>
+		)
+	}
+}
+
+
+class ShowPost extends Component {
+
+	viewer_is_logged_in = document.getElementById('viewer_is_logged_in').value ;
+
+	state = {
+		'commentsAreLoading' : true ,
+		'commentsLoading' : true ,
+		'commentsData' : [] ,
+		'commentsRaw' : {} ,
+	}
+
+
+	componentDidMount = () => {
+		this.loadComments() ;
+	}
+	
+	loadComments = () => {
+		
+		self = this ;
+
+		// check if the user liked the post and change state if did
+		Axios.get("/getCommentsForPost" , {
+			'params' : {
+				'postId' : self.props.item.id ,
+			} ,
+		}).then(function (response) {
+
+			self.setState({
+				'commentsData' : response.data.data ,
+				'commentsRaw' : response.data ,
+				// 'commentsLoadig' : false ,
+			})
+
+		}).catch(function (error) {
+			console.log(error.status) ;
+		}).finally(function () {
+			self.setState({
+				'commentsLoading' : false ,
+			})
+		})
+	}
+
+	renderComments = (comment) => {
+
+		return (
+			<Segment vertical key={comment.id}>
+				<a style={{'fontSize' : '15px'}} href={"/u/" + comment.name} >{comment.name}</a>
+				<p>{comment.content}</p>
 			</Segment>
 		)
 	}
 
 
+	renderLoader =() => {
+		return (
+			<Dimmer inverted active >
+				<Loader />
+			</Dimmer>
+		)
+	}
+
+
+
+	render() {
+		return (
+			<Modal open={this.props.open} onClose={this.props.close}>
+				<Modal.Header>
+					Delete Your Account
+				</Modal.Header>
+				<Modal.Content>
+					<Segment basic>
+						<div style={{ 'display' : 'inline-block' , 'width' : '30px' , 'verticalAlign' : 'top' , 'marginLeft' : '0px' , 'marginRight' : '10px' }}>
+							<Image size='mini' src={"/" + this.props.img} circular />
+						</div>
+
+						<div style={{ 'display' : 'inline-block' , 'width' : 'calc(100% - 43px)' }} >
+							<div >
+								<a style={{ 'fontWeight' : 'bold' , 'fontSize' : '17px' }} href={"/u/" + this.props.item.name} >{this.props.item.name}</a>
+							</div>
+							<div>
+								<p>{this.props.item.content}</p>
+							</div>
+							<div>
+								<span>
+									<Icon name='comments' color='grey' disabled />
+									<span style={{ 'color' : 'grey' }} >{this.props.commentsCount}</span>
+								</span>
+								<span style={{ 'cursor' : 'pointer'  , 'marginLeft' : '25px'}} onClick={this.props.toggleLike} >
+									<Icon color={this.props.userDidLike()} name='like' disabled /> 
+									<span style={{ 'color' : 'grey' }} >{this.props.likesCount}</span>
+								</span>
+							</div>
+						</div>
+					</Segment>
+					<Segment  basic style={{ 'marginTop' : '40px' , 'paddingLeft' : '70px' , 'paddingRight' : '70px'  }} >
+						{this.state.commentsLoading ? 
+							this.renderLoader()
+							:
+							this.state.commentsData.map(this.renderComments)
+						}
+					</Segment>
+				</Modal.Content>
+			</Modal>
+		)
+	}
+
+
 }
-
-

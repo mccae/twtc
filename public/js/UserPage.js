@@ -74678,6 +74678,7 @@ function (_Component) {
           return 'no posts to show';
         } else {
           return react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(_component_Posts_js__WEBPACK_IMPORTED_MODULE_5__["default"], {
+            showBtn: _this.showBtn(),
             isLoading: _this.state.loading,
             loadMore: _this.loadMore,
             userImg: _this.state.userImg,
@@ -74693,6 +74694,15 @@ function (_Component) {
           active: true,
           inline: "centered"
         });
+      }
+    });
+
+    _defineProperty(_assertThisInitialized(_this), "showBtn", function () {
+      // if the current page is the same as the last page mean load button show not be viewd so return false
+      if (_this.state.postsRaw.current_page == _this.state.postsRaw.last_page) {
+        return false;
+      } else {
+        return true;
       }
     });
 
@@ -75203,7 +75213,8 @@ function (_Component) {
       'likesCount': 0,
       'commentsCount': 0,
       'userDidLike': 0,
-      'loading': 0
+      'loading': false,
+      'showPostOpen': false
     });
 
     _defineProperty(_assertThisInitialized(_this), "componentDidMount", function () {
@@ -75264,7 +75275,7 @@ function (_Component) {
 
 
       _this.setState({
-        'loading': 1
+        'loading': true
       });
 
       axios__WEBPACK_IMPORTED_MODULE_3___default.a.get("/toggleLike", {
@@ -75284,26 +75295,10 @@ function (_Component) {
         console.log(error);
       })["finally"](function () {
         self.setState({
-          'loading': 0
+          'loading': false
         });
       });
     });
-
-    _defineProperty(_assertThisInitialized(_this), "showLoader", function () {
-      if (_this.state.loading == 1) {
-        return true;
-      }
-
-      ;
-
-      if (_this.state.loading == 0) {
-        return false;
-      }
-
-      ;
-    });
-
-    _defineProperty(_assertThisInitialized(_this), "showPost", function () {});
 
     _defineProperty(_assertThisInitialized(_this), "getProfileImg", function () {
       // return profile 
@@ -75317,13 +75312,45 @@ function (_Component) {
       }
     });
 
+    _defineProperty(_assertThisInitialized(_this), "showPost", function () {
+      _this.setState({
+        'showPostOpen': true
+      });
+    });
+
+    _defineProperty(_assertThisInitialized(_this), "closeShowPost", function () {
+      _this.setState({
+        'showPostOpen': false
+      });
+    });
+
+    _defineProperty(_assertThisInitialized(_this), "renderShowPost", function () {
+      if (_this.state.showPostOpen) {
+        return react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(ShowPost, _defineProperty({
+          item_id: _this.props.item_id,
+          close: _this.closeShowPost,
+          open: _this.state.showPostOpen,
+          img: _this.getProfileImg(),
+          item: _this.props.item,
+          commentsCount: _this.state.commentsCount,
+          toggleLike: _this.toggleLike,
+          userDidLike: _this.userDidLike,
+          likesCount: _this.state.likesCount
+        }, "commentsCount", _this.state.commentsCount));
+      }
+    });
+
     return _this;
   }
 
   _createClass(Post, [{
     key: "render",
     value: function render() {
-      return react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(semantic_ui_react__WEBPACK_IMPORTED_MODULE_2__["Segment"], {
+      return react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("div", {
+        style: {
+          'marginTop': '20px'
+        }
+      }, react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(semantic_ui_react__WEBPACK_IMPORTED_MODULE_2__["Segment"], {
         onClick: this.showPost
       }, react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("div", {
         style: {
@@ -75373,8 +75400,8 @@ function (_Component) {
       }, this.state.likesCount)))), react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(semantic_ui_react__WEBPACK_IMPORTED_MODULE_2__["Loader"], {
         size: "mini",
         inline: true,
-        active: this.showLoader()
-      }));
+        active: this.state.loading
+      })), this.renderShowPost());
     }
   }]);
 
@@ -75382,6 +75409,148 @@ function (_Component) {
 }(react__WEBPACK_IMPORTED_MODULE_0__["Component"]);
 
 
+
+var ShowPost =
+/*#__PURE__*/
+function (_Component2) {
+  _inherits(ShowPost, _Component2);
+
+  function ShowPost() {
+    var _getPrototypeOf3;
+
+    var _this2;
+
+    _classCallCheck(this, ShowPost);
+
+    for (var _len2 = arguments.length, args = new Array(_len2), _key2 = 0; _key2 < _len2; _key2++) {
+      args[_key2] = arguments[_key2];
+    }
+
+    _this2 = _possibleConstructorReturn(this, (_getPrototypeOf3 = _getPrototypeOf(ShowPost)).call.apply(_getPrototypeOf3, [this].concat(args)));
+
+    _defineProperty(_assertThisInitialized(_this2), "viewer_is_logged_in", document.getElementById('viewer_is_logged_in').value);
+
+    _defineProperty(_assertThisInitialized(_this2), "state", {
+      'commentsAreLoading': true,
+      'commentsLoading': true,
+      'commentsData': [],
+      'commentsRaw': {}
+    });
+
+    _defineProperty(_assertThisInitialized(_this2), "componentDidMount", function () {
+      _this2.loadComments();
+    });
+
+    _defineProperty(_assertThisInitialized(_this2), "loadComments", function () {
+      self = _assertThisInitialized(_this2); // check if the user liked the post and change state if did
+
+      axios__WEBPACK_IMPORTED_MODULE_3___default.a.get("/getCommentsForPost", {
+        'params': {
+          'postId': self.props.item.id
+        }
+      }).then(function (response) {
+        self.setState({
+          'commentsData': response.data.data,
+          'commentsRaw': response.data // 'commentsLoadig' : false ,
+
+        });
+      })["catch"](function (error) {
+        console.log(error.status);
+      })["finally"](function () {
+        self.setState({
+          'commentsLoading': false
+        });
+      });
+    });
+
+    _defineProperty(_assertThisInitialized(_this2), "renderComments", function (comment) {
+      return react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(semantic_ui_react__WEBPACK_IMPORTED_MODULE_2__["Segment"], {
+        vertical: true,
+        key: comment.id
+      }, react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("a", {
+        style: {
+          'fontSize': '15px'
+        },
+        href: "/u/" + comment.name
+      }, comment.name), react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("p", null, comment.content));
+    });
+
+    _defineProperty(_assertThisInitialized(_this2), "renderLoader", function () {
+      return react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(semantic_ui_react__WEBPACK_IMPORTED_MODULE_2__["Dimmer"], {
+        inverted: true,
+        active: true
+      }, react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(semantic_ui_react__WEBPACK_IMPORTED_MODULE_2__["Loader"], null));
+    });
+
+    return _this2;
+  }
+
+  _createClass(ShowPost, [{
+    key: "render",
+    value: function render() {
+      return react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(semantic_ui_react__WEBPACK_IMPORTED_MODULE_2__["Modal"], {
+        open: this.props.open,
+        onClose: this.props.close
+      }, react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(semantic_ui_react__WEBPACK_IMPORTED_MODULE_2__["Modal"].Header, null, "Delete Your Account"), react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(semantic_ui_react__WEBPACK_IMPORTED_MODULE_2__["Modal"].Content, null, react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(semantic_ui_react__WEBPACK_IMPORTED_MODULE_2__["Segment"], {
+        basic: true
+      }, react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("div", {
+        style: {
+          'display': 'inline-block',
+          'width': '30px',
+          'verticalAlign': 'top',
+          'marginLeft': '0px',
+          'marginRight': '10px'
+        }
+      }, react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(semantic_ui_react__WEBPACK_IMPORTED_MODULE_2__["Image"], {
+        size: "mini",
+        src: "/" + this.props.img,
+        circular: true
+      })), react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("div", {
+        style: {
+          'display': 'inline-block',
+          'width': 'calc(100% - 43px)'
+        }
+      }, react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("div", null, react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("a", {
+        style: {
+          'fontWeight': 'bold',
+          'fontSize': '17px'
+        },
+        href: "/u/" + this.props.item.name
+      }, this.props.item.name)), react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("div", null, react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("p", null, this.props.item.content)), react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("div", null, react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("span", null, react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(semantic_ui_react__WEBPACK_IMPORTED_MODULE_2__["Icon"], {
+        name: "comments",
+        color: "grey",
+        disabled: true
+      }), react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("span", {
+        style: {
+          'color': 'grey'
+        }
+      }, this.props.commentsCount)), react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("span", {
+        style: {
+          'cursor': 'pointer',
+          'marginLeft': '25px'
+        },
+        onClick: this.props.toggleLike
+      }, react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(semantic_ui_react__WEBPACK_IMPORTED_MODULE_2__["Icon"], {
+        color: this.props.userDidLike(),
+        name: "like",
+        disabled: true
+      }), react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("span", {
+        style: {
+          'color': 'grey'
+        }
+      }, this.props.likesCount))))), react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement(semantic_ui_react__WEBPACK_IMPORTED_MODULE_2__["Segment"], {
+        basic: true,
+        style: {
+          'marginTop': '40px',
+          'paddingLeft': '70px',
+          'paddingRight': '70px'
+        }
+      }, this.state.commentsLoading ? this.renderLoader() : this.state.commentsData.map(this.renderComments))));
+    }
+  }]);
+
+  return ShowPost;
+}(react__WEBPACK_IMPORTED_MODULE_0__["Component"]);
 
 /***/ }),
 

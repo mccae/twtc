@@ -65,4 +65,23 @@ class CommentController extends Controller
 
 		}
 	}
+
+
+	public function getCommentsForPost(Request $request)
+	{
+
+		$request->validate([
+			'postId' => 'required' ,
+		]) ;
+
+		$post_id = $request->input('postId') ;
+
+		$comments = Comment::where('post_id' , '=' , $post_id)
+			->join('users' , 'comments.user_id' , '=' , 'users.id')
+			->select('comments.id' , 'comments.content' , 'users.name')
+			->paginate(7) ;
+
+		return $comments ;
+
+	}
 }

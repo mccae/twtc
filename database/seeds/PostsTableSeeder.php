@@ -13,7 +13,7 @@ class PostsTableSeeder extends Seeder
     {
 
 		// create posts with random info
-		for ($i=0 ; $i<500 ; $i++)
+		for ($i=0 ; $i<300 ; $i++)
 		{
 
 			$content = "" ;
@@ -28,6 +28,7 @@ class PostsTableSeeder extends Seeder
 				if (strlen($content) > 250)
 				{
 					$content = substr($content , 0 , 250) ;
+					break ;
 				}
 			}
 			

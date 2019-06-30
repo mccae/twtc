@@ -52,6 +52,6 @@ Route::get('/getUsersPosts' , 'MainController@getUsersPosts') ;
 Route::get('/getProfileImg' , 'UserController@getProfileImg') ;
 Route::get('/getUsersCountsInfo' , 'UserController@getUsersCountsInfo') ;
 Route::get('/userIsFollowing' , 'FollowController@userIsFollowing') ;
-
+Route::get('/getCommentsForPost' , 'CommentController@getCommentsForPost') ;
 
 

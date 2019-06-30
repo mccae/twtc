@@ -142,7 +142,7 @@ class App extends Component {
 			else
 			{
 				return (
-						<Posts isLoading={this.state.loading} loadMore={this.loadMore} userImg={this.state.userImg} itemsData={this.state.postsData} />
+						<Posts showBtn={this.showBtn()} isLoading={this.state.loading} loadMore={this.loadMore} userImg={this.state.userImg} itemsData={this.state.postsData} />
 				)
 			}
 		}
@@ -153,6 +153,21 @@ class App extends Component {
 			)
 		}
 
+	}
+
+
+
+	// return true if the load more button should be rendered
+	showBtn= () =>
+	{
+		// if the current page is the same as the last page mean load button show not be viewd so return false
+		if (this.state.postsRaw.current_page == this.state.postsRaw.last_page) {
+			return false ;
+		}
+		else
+		{
+			return true ;
+		}
 	}
 
 
